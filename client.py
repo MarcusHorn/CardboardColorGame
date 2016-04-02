@@ -10,6 +10,13 @@ def serverHandle(server,data):
     while True:
         try:
             msg = server.recv(10000).decode("UTF-8")
+            fullMsg = msg
+            if "dataStart~" in msg:
+                while True:
+                    msg = server.recv(10000).decode("UTF-8")
+                    fullMsg += msg
+                    if "~dataEnd" in msg:
+                        break
             if msg == "Max Players Reached":
                 print(msg)
                 data.connected = False #close thread
@@ -36,6 +43,7 @@ def serverHandle(server,data):
                 data.playersNeeded = int(msg.split("~")[1])
             elif "circles~" in msg:
                 cir = msg.split("~")[-1]
+                data.deltaAngle += float(msg.split("~")[1])
                 try:
                     cir = eval(cir)
                     data.circleList = [ ]
@@ -49,8 +57,12 @@ def serverHandle(server,data):
                     data.numberOfCircles = len(data.circleList)
                     data.circleRadius = int(getCircleRadius(data))
                     data.boardRadius = int(data.centerBoardx - 2 * data.circleRadius)
+                    getWinningCircle(data)
                 except:
                     pass #don't crash on bad transmit
+            elif "playAnimation" in msg:
+                data.clearedCircle = True
+                getWinningCircle(data)
             else:
                 print("UNKNOWN MESSAGE: %s" % msg)
         except:
@@ -102,7 +114,7 @@ def init(data):
     data.targetCircle = (0,0,0)
     initTitle(data)
     data.divisor = 3
-    data.deltaAngle = 0.1
+    data.deltaAngle = 0.05
     data.numberOfCircles = 0
     data.centerBoardx = data.width // 2
     data.centerBoardy = (1/10) * data.height + data.centerBoardx
@@ -129,6 +141,11 @@ def initTitle(data):
     data.tr_offsetY = 2
     data.tr_font = "%s %d %s" % (fontName, fontSize, fontStyle)
 
+def getWinningCircle(data):
+    for circle in data.circleList:
+        if circle.color == data.targetCircle.color:
+            data.winningCircle = circle
+
 def getCircleRadius(data):
     if data.numberOfCircles <= 10:
         numberOfCircles = 9 #Reference number for standard board
@@ -139,7 +156,7 @@ def getCircleRadius(data):
     return orbit//(math.pi*2)//4
 
 def connectToServer(data):
-    HOST = "localhost"
+    HOST = "25.130.151.205"
     PORT = 8081
     try:
         data.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -187,6 +204,7 @@ def timerFired(data):
     if data.clearedCircle:
         data.timeElapsed += data.timerDelay
         if data.timeElapsed % data.winDelay != 0:
+            getWinningCircle(data)
             data.winningCircle.rotateR += data.timerDelay
             data.winningCircle.updateCoords(data)
             return
@@ -225,9 +243,13 @@ def redrawAll(canvas, data):
         for circle in data.circleList:
             (top, left) = (circle.x - circle.r, circle.y - circle.r)
             (bottom, right) = (circle.x + circle.r, circle.y + circle.r)
-            if not circle == data.winningCircle:
+            if circle == data.winningCircle:
+                if not data.clearedCircle:
+                    canvas.create_line(circle.x, circle.y, data.centerBoardx, data.centerBoardy,
+                                fill = circle.color, width = 5)
+            else:
                 canvas.create_line(circle.x, circle.y, data.centerBoardx, data.centerBoardy,
-                            fill = circle.color, width = 5)
+                    fill = circle.color, width = 5)
             canvas.create_oval(top, left, bottom, right, fill=circle.color)
         tr, color = data.targetCircle.r,data.targetCircle.color
         tx, ty = data.centerBoardx, data.centerBoardy
