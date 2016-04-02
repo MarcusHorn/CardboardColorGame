@@ -40,3 +40,4 @@ class Board(object):
         self.x = cx
         self.y = cy
         self.r = boardRadius
+        self.colorBoundRadius = boardRadius/2
