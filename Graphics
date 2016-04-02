@@ -11,6 +11,12 @@ class Circle(object):
         self.y = int(data.centerBoardy + data.boardRadius * math.sin(self.angle))
         self.r = data.circleRadius
         self.color = color
+        self.centreX = data.centerBoardx
+        self.centreY = data.centerBoardy
+
+    def drawLine(self, canvas, data):
+        canvas.create_line(self.x, self.y, self.centreX, self.centreY,
+                                              fill = self.color, width = 5)
        
     def rotate(self, data):
         self.angle += data.deltaAngle
@@ -63,7 +69,6 @@ def init_1(data):
     data.step = 0
     generateCircles(data)
     
-
 def getCircleRadius(data):
     circumferenceBoard = 2 * math.pi * data.width
     orbit = circumferenceBoard//data.numberOfCircles
@@ -88,7 +93,6 @@ def isOverlapping(angle, data):
     distance = 2 * data.circleRadius**2 * (1 + math.cos(angle))
     return distance < 2 * data.circleRadius
 
-
 # from notes
 def rgbString(red, green, blue):
     return "#%02x%02x%02x" % (red, green, blue)
@@ -104,8 +108,9 @@ def mousePressed(event, data):
             print("Yay")
 
 def difficulty(data):
-    if data.level % 2 == 0:
-        data.numberOfCircles += 1
+    if not isOverlapping(data.deltaAngle, data):        
+        if data.level % 2 == 0:
+            data.numberOfCircles += 1
     if data.level % 10 == 0:
         if data.deltaAngle < 0:
             data.deltaAngle -= 0.05
@@ -131,6 +136,8 @@ def redrawAll(canvas, data):
     drawSurroundingCircles(canvas, data)
 
 def drawSurroundingCircles(canvas, data):
+    for circle in range(len(data.circleList)):
+        data.circleList[circle].drawLine(canvas, data)
     for circle in range(len(data.circleList)):
         data.circleList[circle].draw(canvas, data)
 
