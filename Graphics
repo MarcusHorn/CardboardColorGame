@@ -23,6 +23,7 @@ def timerFired(data):
 
 def redrawAll(canvas, data):
     # draw in canvas
+    #Test this is a test
     
 
 ####################################
