@@ -8,66 +8,63 @@ from random import randint
 
 def serverHandle(server,data):
     while True:
-        try:
-            msg = server.recv(10000).decode("UTF-8")
-            fullMsg = msg
-            if "dataStart~" in msg:
-                while True:
-                    msg = server.recv(10000).decode("UTF-8")
-                    fullMsg += msg
-                    if "~dataEnd" in msg:
-                        break
-            if msg == "Max Players Reached":
-                print(msg)
-                data.connected = False #close thread
-                closeWindow(data)
-                return
-            elif "Connected" in msg:
-                print("Connected")
-                data.whoAmI = msg.split("~")[1]
-                data.connected = True
-            elif "ping" in msg.lower():
-                pass
-            elif "dataStart~" in msg:
-                data.board = dict()
-                transmisson = msg.split("~")
-                data.whoAmI = transmisson[1]
-                for bit in transmisson[2:]:
-                    if bit != "dataEnd":
-                        temp = eval(bit)
-                        if temp[2] not in data.board:
-                            data.board[temp[2]] = dict()
-                        data.board[temp[2]]["pos"] = temp[1]
-                        data.board[temp[2]]["score"] = temp[3]
-            elif "waiting" in msg:
-                data.playersNeeded = int(msg.split("~")[1])
-            elif "circles~" in msg:
-                cir = msg.split("~")[-1]
-                data.deltaAngle += float(msg.split("~")[1])
-                try:
-                    cir = eval(cir)
-                    data.circleList = [ ]
-                    for tcir in range(len(cir)):
-                        if tcir == 0:
-                            data.targetCircle = TargetCircle(cir[tcir][0],cir[tcir][1],cir[tcir][2],cir[tcir][3])
-                            continue
-                        x,y,r,angle,color = cir[tcir][0],cir[tcir][1],cir[tcir][2],cir[tcir][3],cir[tcir][4]
-                        nc = Circle(x,y,r,angle,color,data)
-                        data.circleList.append(nc)
-                    data.numberOfCircles = len(data.circleList)
-                    data.circleRadius = int(getCircleRadius(data))
-                    data.boardRadius = int(data.centerBoardx - 2 * data.circleRadius)
-                    getWinningCircle(data)
-                except:
-                    pass #don't crash on bad transmit
-            elif "playAnimation" in msg:
-                data.clearedCircle = True
-                getWinningCircle(data)
-            else:
-                print("UNKNOWN MESSAGE: %s" % msg)
-        except:
-            print("Closing thread!")
+        msg = server.recv(1).decode("UTF-8")
+        fullMsg = msg
+        while True:
+            msg = server.recv(1).decode("UTF-8")
+            fullMsg += msg
+            if "\n" in msg:
+                break
+        msg = fullMsg
+        if "Max Players Reached" in msg:
+            print(msg)
+            data.connected = False #close thread
+            closeWindow(data)
             return
+        elif "Connected" in msg:
+            print("Connected")
+            data.whoAmI = msg.split("~")[1]
+            data.connected = True
+        elif "ping" in msg.lower():
+            pass
+        elif "dataStart~" in msg:
+            data.board = dict()
+            transmisson = msg.split("~")
+            data.whoAmI = transmisson[1]
+            print(transmisson)
+            for bit in transmisson[2:]:
+                if "dataEnd" not in bit:
+                    temp = eval(bit)
+                    if str(temp[2]) not in data.board:
+                        data.board[temp[2]] = dict()
+                    data.board[temp[2]]["pos"] = temp[1]
+                    data.board[temp[2]]["score"] = temp[3]
+        elif "waiting" in msg:
+            data.playersNeeded = int(msg.split("~")[1])
+        elif "circles~" in msg:
+            cir = msg.split("~")[-1]
+            data.deltaAngle += float(msg.split("~")[1])
+            try:
+                cir = eval(cir)
+                data.circleList = [ ]
+                for tcir in range(len(cir)):
+                    if tcir == 0:
+                        data.targetCircle = TargetCircle(cir[tcir][0],cir[tcir][1],cir[tcir][2],cir[tcir][3])
+                        continue
+                    x,y,r,angle,color = cir[tcir][0],cir[tcir][1],cir[tcir][2],cir[tcir][3],cir[tcir][4]
+                    nc = Circle(x,y,r,angle,color,data)
+                    data.circleList.append(nc)
+                data.numberOfCircles = len(data.circleList)
+                data.circleRadius = int(getCircleRadius(data))
+                data.boardRadius = int(data.centerBoardx - 2 * data.circleRadius)
+                getWinningCircle(data)
+            except:
+                pass #don't crash on bad transmit
+        elif "playAnimation" in msg:
+            data.clearedCircle = True
+            getWinningCircle(data)
+        else:
+            print("UNKNOWN MESSAGE: %s" % msg)
 
 class Circle(object):
     def __init__(self,x,y,r,angle,color,data):
