@@ -64,7 +64,7 @@ def init(data):
     data.level = 0
     data.targetRadius = data.width//10
     data.deltaAngle = 0.1
-    data.animDelay = 600
+    data.animDelay = 500
     data.circleRadius = getCircleRadius(data)
     init_1(data)
 
@@ -78,6 +78,8 @@ def init_1(data):
     data.timeElapsed = 0 #Used for transition between levels
     data.circleRadius = getCircleRadius(data)
     data.boardRadius = int(data.centerBoardx - 2 * data.circleRadius)
+    data.winTimeElapsed = 0
+    data.winDelay = 1000
     generateCircles(data)
     
 def getCircleRadius(data):
@@ -121,6 +123,16 @@ def mousePressed(event, data):
         if circle.validClickInsideCircle(x, y) and circle==data.targetCircle:
             data.clearedCircle = True
             data.winningCircle = circle
+            data.circleList.remove(data.winningCircle)
+            newNumberOfCircles = len(data.circleList)
+            if newNumberOfCircles == 0:
+                data.wonLevel = True
+            else:
+                targetIndex = randint(0, len(data.circleList) - 1)
+                targetColor = data.circleList[targetIndex].color
+                data.targetCircle.color = targetColor
+                data.timeElapsed += data.timerDelay
+            return
 
 def difficulty(data):
     if not isOverlapping(data.deltaAngle, data):        
@@ -154,18 +166,15 @@ def timerFired(data):
             return
         data.timeElapsed = 0
         data.clearedCircle = False
-        data.circleList.remove(data.winningCircle)
         data.winningCircle = None
-        newNumberOfCircles = len(data.circleList)
-        if newNumberOfCircles == 0:
+    elif data.wonLevel:
+        data.winTimeElapsed += data.timerDelay
+        if data.winTimeElapsed % data.winDelay != 0:
+            return
+        else:
             data.level += 1
             difficulty(data)
             init_1(data)
-        else:
-            targetIndex = randint(0, len(data.circleList) - 1)
-            targetColor = data.circleList[targetIndex].color
-            data.targetCircle.color = targetColor
-            data.timeElapsed += data.timerDelay
 
 def redrawAll(canvas, data):
     # draw in canvas
@@ -174,6 +183,8 @@ def redrawAll(canvas, data):
     drawGrid(canvas, data)
 
 def drawSurroundingCircles(canvas, data):
+    if data.clearedCircle:
+        data.winningCircle.draw(canvas, data)
     for circle in range(len(data.circleList)):
         data.circleList[circle].draw(canvas, data)
     for circle in range(len(data.circleList)):
