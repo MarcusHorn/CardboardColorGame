@@ -61,12 +61,32 @@ def init(data):
     data.centerBoardy = (1/10) * data.height + data.centerBoardx
     data.numberOfCircles = 3
     data.colorOffset = max(18 - data.numberOfCircles, 5)
-    data.level = 0
+    data.level = 1
+    data.score = 0
     data.targetRadius = data.width//10
     data.deltaAngle = 0.1
     data.animDelay = 500
+    data.winDelay = 500
     data.circleRadius = getCircleRadius(data)
     init_1(data)
+    initTitle(data)
+
+def initTitle(data):
+    data.tr_height = data.height/6
+    data.tr_width = data.width
+    data.gameName =  "C O L O R  C L I C K E R"
+    fontName = "Verdana"
+    fontSize = 30
+    fontStyle = "bold"
+    data.tr_fontColor = rgbString((50, 50, 50)) #dark gray
+    data.tr_offsetFontColor = rgbString((191, 191, 191))
+    data.tr_offsetX = 2
+    data.tr_offsetY = 2
+    data.tr_font = "%s %d %s" % (fontName, fontSize, fontStyle)
+
+def rgbString(rgb):
+    red, green, blue = rgb
+    return "#%02x%02x%02x" % (red, green, blue)
 
 # put it in the run function
 def init_1(data):
@@ -79,7 +99,6 @@ def init_1(data):
     data.circleRadius = getCircleRadius(data)
     data.boardRadius = int(data.centerBoardx - 2 * data.circleRadius)
     data.winTimeElapsed = 0
-    data.winDelay = 1000
     generateCircles(data)
     
 def getCircleRadius(data):
@@ -100,7 +119,7 @@ def generateCircles(data):
         r *= colorOffset
         g *= colorOffset
         b *= colorOffset
-        color = rgbString(r, g, b)
+        color = rgbString((r, g, b))
         data.circleList.append(Circle(angle*index, color, data))
     if isOverlapping(angle, data):
         data.circleRadius = getCircleRadius(data)
@@ -111,10 +130,6 @@ def generateCircles(data):
 def isOverlapping(angle, data):
     distance = 2 * data.circleRadius**2 * (1 + math.cos(angle))
     return distance < 2 * data.circleRadius
-
-# from notes
-def rgbString(red, green, blue):
-    return "#%02x%02x%02x" % (red, green, blue)
 
 def mousePressed(event, data):
     x, y = event.x, event.y
@@ -180,7 +195,8 @@ def redrawAll(canvas, data):
     # draw in canvas
     drawSurroundingCircles(canvas, data)
     data.targetCircle.draw(canvas, data)
-    drawGrid(canvas, data)
+    drawTitle(canvas, data)
+    drawLevel(canvas, data)
 
 def drawSurroundingCircles(canvas, data):
     if data.clearedCircle:
@@ -192,8 +208,16 @@ def drawSurroundingCircles(canvas, data):
             continue
         else: data.circleList[circle].drawLine(canvas, data)
 
-def drawGrid(canvas, data):
-    pass
+def drawTitle(canvas,data):
+    canvas.create_text(data.width//2-data.tr_offsetX,50+data.tr_offsetY,text=data.gameName, 
+        fill=data.tr_offsetFontColor, font=data.tr_font)
+    canvas.create_text(data.width//2,50,text=data.gameName, 
+        fill=data.tr_fontColor, font=data.tr_font)
+
+def drawLevel(canvas,data):
+    font = "Verdana 20"
+    canvas.create_text(data.width//2,100,text="Level %d" % data.level, 
+        fill=data.tr_fontColor, font=font)
 
 
 ####################################
@@ -239,5 +263,4 @@ def run():
     timerFiredWrapper(canvas, data)
     # and launch the app
     root.mainloop()  # blocks until window is closed
-    print("bye!")
 run()
