@@ -20,7 +20,7 @@ def keyPressed(event, data):
 
 def timerFired(data):
     pass
-
+# idk how this works
 def redrawAll(canvas, data):
     # draw in canvas
     #Test this is a test
