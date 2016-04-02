@@ -212,9 +212,9 @@ def timer(playerData,data):
         if data.timeFire % msToFire == 0:
                 data.timer -= 1
                 print(data.timer)
-            if data.timer <= 0:
-                data.gameOver = True
-                print("GAME OVER")
+        if data.timer <= 0:
+            data.gameOver = True
+            print("GAME OVER")
 
 def sendCircleData(playerData,data):
     summary = getCircleList(data)
