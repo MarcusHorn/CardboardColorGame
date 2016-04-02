@@ -3,7 +3,12 @@
 from tkinter import *
 
 def init(data):
-    pass
+    data.cx = data.width/2
+    data.cy = data.height/2
+    data.r = 10
+    data.step = 0
+    #data.targetCirlce = Circle()
+    data.circles = []
 
 def mousePressed(event, data):
     pass
@@ -12,11 +17,24 @@ def keyPressed(event, data):
     pass
 
 def timerFired(data):
+    data.step += 1
     pass
 
 def redrawAll(canvas, data):
+    data.targetCircle.draw()
+    drawSurroundingCircles(canvas, data)
     canvas.create_rectangle(0,0,100,data.height/6,fill="red")
-    canvas.create_rectangle(0,0,100,data.height/6,fill="red")
+    canvas.create_oval(data.width/10,data.height/10*2,data.width/10*9,data.height/10*9,fill="white")
+
+def draw(self, data):
+    (top, left) = (self.x - self.r, self.y - self.r)
+    (bottom, left) = (self.x + self.r, self.y + self.r)
+    color = rgbString(self.color)
+    canvas.create_oval = (top, left, bottom, right, fill=color)
+
+def drawSurroundingCircles(canvas, data):
+    for circle in range(len(data.circles)):
+        circle.draw()
 
 ####################################
 # Run
@@ -45,12 +63,12 @@ def runGame():
     class Struct(object): pass
     data = Struct()
     data.timerDelay = 100 # milliseconds
-    init(data)
-    # create the root and the canvas
     root = Tk()
     data.root = root
     data.height = (14/16)* root.winfo_screenheight()
     data.width = (4/5) * root.winfo_screenheight()
+    init(data)
+    # create the root and the canvas
     canvas = Canvas(root, width=data.width, height=data.height)
     canvas.pack()
     # set up events
