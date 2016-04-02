@@ -1,46 +1,113 @@
-#Hack112 - CardBoard
-
 from tkinter import *
+import math
+import random
+from random import *
 
+# circle class
+class Circle(object):
+    def __init__(self, angle, color, data):
+        self.angle = angle
+        self.x = int(data.boardRadius + data.boardRadius * math.cos(self.angle))
+        self.y = int(data.boardRadius + data.boardRadius * math.sin(self.angle))
+        self.r = data.circleRadius
+        self.color = color
+        
+    def updateCircle(self, dAngle):
+        self.angle += dAngle
+        self.angle %= 360
+        radianAngle = angle * (math.pi/180) #Used for math.cos and math.sin
+        self.x = (boardRadius + boardRadius*math.cos(radianAngle)) // 1
+        self.y = (boardRadius + boardRadius*math.sin(radianAngle)) // 1
+        self.r = circleRadius - (circleRadius*math.sin(radianAngle)) // 2
+        
+    def getCoords(self):
+        return self.x, self.y
+        
+    def getColor(self):
+        return self.color
+        
+    def getRadius(self):
+        return self.r
+    
+    def validClickInsideCircle(self, x, y):
+        return ((x-self.x)**2 + (y-self.y)**2)**.5 <= self.r
+        
+    def __eq__(self, other):
+        return self.color == other.color
+        
+    # do we keep it or not
+    def connect(self):
+        self.connected = True
+
+    def updateSpeed(self):
+        pass
+
+class targetCircle(self, targetColor, data):
+    def __init__(self):
+        self.x = data.width//2
+        # change afterwords
+        self.y = data.height//2
+        self.color = targetColor
+
+
+# game data
 def init(data):
-    data.cx = data.width/2
-    data.cy = data.height/2
-    data.r = 10
-    data.step = 0
-    #data.targetCirlce = Circle()
-    data.circles = []
+    data.numberOfCircles = 3
+    data.cicleRadius = getCircleRadius(data)
+    data.boardRadius = data.width//2 - data.cicleRadius
+    data.targetRadius = data.width//8
+    data.deltaAngle = 0
+
+# put it in the run function
+def init_1(data):
+    data.circleList = []
+    data.numOfCircles = data.numberOfCircles + data.level
+    
+
+def getCircleRadius(data):
+    circumferenceBoard = 2 * math.pi * data.width
+    orbit = circumferenceBoard//data.numberOfCircles
+    return orbit//(math.pi*2)
+
+def generateCircles(data):
+    angle = (math.pi * 2)//data.numberOfCircles
+    for circles in range(data.numberOfCircles):
+        r, g, b = randint(0,255), randint(0,255), randint(0,255)
+        color = rgbString(r, g, b)
+        data.circleList.append(Circle(angle, color, data))
+    targetIndex = randint(0, data.numberOfCircles - 1)
+    targetColor = data.circleList[targetIndex].color
+    data.targetCircle = targetCircle(targetColor, data)
+
+
+# from notes
+def rgbString(red, green, blue):
+    return "#%02x%02x%02x" % (red, green, blue)
 
 def mousePressed(event, data):
-    pass
+    x, y = event.x, event.y
+    for circle in range(data.numberOfCircles):
+        if circle.validClickInsideCircle(x, y) and circle==data.targetCircle:
+
+
+
 
 def keyPressed(event, data):
+    # use event.char and event.keysym
     pass
 
 def timerFired(data):
-    data.step += 1
     pass
 
 def redrawAll(canvas, data):
-    data.targetCircle.draw()
-    drawSurroundingCircles(canvas, data)
-    canvas.create_rectangle(0,0,100,data.height/6,fill="red")
-    canvas.create_oval(data.width/10,data.height/10*2,data.width/10*9,data.height/10*9,fill="white")
-
-def draw(self, data):
-    (top, left) = (self.x - self.r, self.y - self.r)
-    (bottom, left) = (self.x + self.r, self.y + self.r)
-    color = rgbString(self.color)
-    canvas.create_oval = (top, left, bottom, right, fill=color)
-
-def drawSurroundingCircles(canvas, data):
-    for circle in range(len(data.circles)):
-        circle.draw()
+    # draw in canvas
+    pass
 
 ####################################
-# Run
+# use the run function as-is
 ####################################
 
-def runGame():
+def run(width=300, height=300):
     def redrawAllWrapper(canvas, data):
         canvas.delete(ALL)
         redrawAll(canvas, data)
@@ -62,13 +129,12 @@ def runGame():
     # Set up data and call init
     class Struct(object): pass
     data = Struct()
+    data.width = width
+    data.height = height
     data.timerDelay = 100 # milliseconds
-    root = Tk()
-    data.root = root
-    data.height = (14/16)* root.winfo_screenheight()
-    data.width = (4/5) * root.winfo_screenheight()
     init(data)
     # create the root and the canvas
+    root = Tk()
     canvas = Canvas(root, width=data.width, height=data.height)
     canvas.pack()
     # set up events
@@ -80,5 +146,3 @@ def runGame():
     # and launch the app
     root.mainloop()  # blocks until window is closed
     print("bye!")
-
-runGame()
