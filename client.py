@@ -31,7 +31,6 @@ def serverHandle(server,data):
             data.board = dict()
             transmisson = msg.split("~")
             data.whoAmI = transmisson[1]
-            print(transmisson)
             for bit in transmisson[2:]:
                 if "dataEnd" not in bit:
                     temp = eval(bit)
