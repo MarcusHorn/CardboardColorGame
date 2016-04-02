@@ -7,89 +7,86 @@ from random import *
 class Circle(object):
     def __init__(self, angle, color, data):
         self.angle = angle
-        self.x = randint(0,255)
-        self.y = randint(0,255)
-        self.r = randint(0,255)
-        print(int(data.boardRadius + data.boardRadius * math.cos(self.angle)))
-        #self.x = int(data.boardRadius + data.boardRadius * math.cos(self.angle))
-        #self.y = int(data.boardRadius + data.boardRadius * math.sin(self.angle))
-        #self.r = data.circleRadius
+        self.x = int(data.centerBoardx + data.boardRadius * math.cos(self.angle))
+        self.y = int(data.centerBoardy + data.boardRadius * math.sin(self.angle))
+        self.r = data.circleRadius
         self.color = color
-    '''   
-    def updateCircle(self, dAngle):
-        self.angle += dAngle
-        self.angle %= 360
-        radianAngle = angle * (math.pi/180) #Used for math.cos and math.sin
-        self.x = (boardRadius + boardRadius*math.cos(radianAngle)) // 1
-        self.y = (boardRadius + boardRadius*math.sin(radianAngle)) // 1
-        self.r = circleRadius - (circleRadius*math.sin(radianAngle)) // 2'''
+       
+    def rotate(self, data):
+        self.angle += data.deltaAngle
+        self.angle %= math.pi * 2
+        self.x = int(data.centerBoardx + data.boardRadius * math.cos(self.angle))
+        self.y = int(data.centerBoardy + data.boardRadius * math.sin(self.angle))
+        self.r = data.circleRadius
         
-    def getCoords(self):
-        return self.x, self.y
-        
-    def getColor(self):
-        return self.color
-        
-    def getRadius(self):
-        return self.r
-    
     def validClickInsideCircle(self, x, y):
         return ((x-self.x)**2 + (y-self.y)**2)**.5 <= self.r
-        
+
+    def isOverlapping(self, other, data):
+        sectorAngle = other.angle - self.angle
+        distance = 2 * data.circleRadius**2 * (1 + math.cos(sectorAngle))
+        #distance = (((other.x-self.x)**2 + (other.y-self.y)**2)**.5)
+        return distance < 2 * data.circleRadius
+
     def __eq__(self, other):
         return self.color == other.color
         
     def draw(self, canvas, data):
         (top, left) = (self.x - self.r, self.y - self.r)
         (bottom, right) = (self.x + self.r, self.y + self.r)
-        #color = rgbString(self.color)
-        canvas.create_oval(top, left, bottom, right) #fill=color)
-
-    def updateSpeed(self):
-        pass
+        canvas.create_oval(top, left, bottom, right, fill=self.color)
 
 class targetCircle(Circle):
     def __init__(self, color, data):
-        self.x = data.width//2
-        # change afterwords
-        self.y = data.height//2
-        self.r = 5
+        self.x = data.centerBoardx
+        self.y = data.centerBoardy
+        self.r = data.targetRadius
         self.color = color
 
 
 # game data
 def init(data):
+    data.centerBoardx = data.width//2
+    data.centerBoardy = (1/10) * data.height + data.centerBoardx
     data.numberOfCircles = 3
     data.level = 0
+    data.test = 10
     data.circleRadius = int(getCircleRadius(data))
-    data.boardRadius = int(data.width//2 - data.circleRadius)
-    print(data.boardRadius)
-    data.targetRadius = data.width//8
-    data.deltaAngle = 0
+    data.boardRadius = int(data.centerBoardx - 2 * data.circleRadius)
+    data.targetRadius = data.width//10
+    data.deltaAngle = 0.1
     init_1(data)
 
 # put it in the run function
 def init_1(data):
     data.circleList = []
-    data.numOfCircles = data.numberOfCircles + data.level
+    data.step = 0
     generateCircles(data)
     
 
 def getCircleRadius(data):
     circumferenceBoard = 2 * math.pi * data.width
     orbit = circumferenceBoard//data.numberOfCircles
-    return orbit//(math.pi*2)
+    return orbit//(math.pi*2)//4
 
 def generateCircles(data):
-    angle = (math.pi * 2)//data.numberOfCircles
+    angle = (math.pi * 2)/data.numberOfCircles
     print(angle)
-    for circles in range(data.numberOfCircles):
+    print(data.numberOfCircles)
+    for index in range(data.numberOfCircles):
         (r, g, b) = (randint(0,255), randint(0,255), randint(0,255))
         color = rgbString(r, g, b)
-        data.circleList.append(Circle(angle, color, data))
+        data.circleList.append(Circle(angle*index, color, data))
+    if isOverlapping(angle, data):
+        print("stop")
+        data.circleRadius = getCircleRadius(data)
     targetIndex = randint(0, data.numberOfCircles - 1)
     targetColor = data.circleList[targetIndex].color
     data.targetCircle = targetCircle(targetColor, data)
+
+def isOverlapping(angle, data):
+    distance = 2 * data.circleRadius**2 * (1 + math.cos(angle))
+    return distance < 2 * data.circleRadius
 
 
 # from notes
@@ -100,12 +97,22 @@ def mousePressed(event, data):
     x, y = event.x, event.y
     for index in range(len(data.circleList)):
         circle = data.circleList[index]
-        print(data.circleList, index)
-        print(circle.x, circle.y, circle.r)
-        #if circle.validClickInsideCircle(x, y) and circle==data.targetCircle:
-            #data.level +=  1
+        if circle.validClickInsideCircle(x, y) and circle==data.targetCircle:
+            data.level +=  1
+            difficulty(data)
+            init_1(data)
+            print("Yay")
 
-
+def difficulty(data):
+    if data.level % 2 == 0:
+        data.numberOfCircles += 1
+    if data.level % 10 == 0:
+        if data.deltaAngle < 0:
+            data.deltaAngle -= 0.05
+        else:
+            data.deltaAngle += 0.05
+    if data.level % 5 == 0:
+        data.deltaAngle *= -1
 
 
 def keyPressed(event, data):
@@ -113,7 +120,10 @@ def keyPressed(event, data):
     pass
 
 def timerFired(data):
-    pass
+    data.step += 1
+    for index in range(len(data.circleList)):
+        circle = data.circleList[index]
+        circle.rotate(data)
 
 def redrawAll(canvas, data):
     # draw in canvas
