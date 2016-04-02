@@ -1,36 +1,27 @@
-# from 112 CMU website
+#Hack112 - CardBoard
 
 from tkinter import *
 
-####################################
-# customize these functions
-####################################
-
 def init(data):
-    # load data.xyz as appropriate
     pass
 
 def mousePressed(event, data):
-    # use event.x and event.y
     pass
 
 def keyPressed(event, data):
-    # use event.char and event.keysym
     pass
 
 def timerFired(data):
     pass
-# idk how this works
+
 def redrawAll(canvas, data):
-    # draw in canvas
-    #Test this is a test
-    
+    canvas.create_rectangle(0,0,100,data.height/6,fill="red")
 
 ####################################
-# use the run function as-is
+# Run
 ####################################
 
-def run(width=300, height=300):
+def runGame():
     def redrawAllWrapper(canvas, data):
         canvas.delete(ALL)
         redrawAll(canvas, data)
@@ -52,12 +43,13 @@ def run(width=300, height=300):
     # Set up data and call init
     class Struct(object): pass
     data = Struct()
-    data.width = width
-    data.height = height
     data.timerDelay = 100 # milliseconds
     init(data)
     # create the root and the canvas
     root = Tk()
+    data.root = root
+    data.height = (14/16)* root.winfo_screenheight()
+    data.width = (1/2.5) * root.winfo_screenwidth()
     canvas = Canvas(root, width=data.width, height=data.height)
     canvas.pack()
     # set up events
@@ -70,4 +62,4 @@ def run(width=300, height=300):
     root.mainloop()  # blocks until window is closed
     print("bye!")
 
-run(400, 200)
+runGame()
