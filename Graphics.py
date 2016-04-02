@@ -7,17 +7,12 @@ from random import *
 class Circle(object):
     def __init__(self, angle, color, data):
         self.angle = angle
-        self.rotateR = data.boardRadius
-        self.x = int(data.centerBoardx + self.rotateR * math.cos(self.angle))
-        self.y = int(data.centerBoardy + self.rotateR * math.sin(self.angle))
+        self.x = int(data.centerBoardx + data.boardRadius * math.cos(self.angle))
+        self.y = int(data.centerBoardy + data.boardRadius * math.sin(self.angle))
         self.r = data.circleRadius
         self.color = color
         self.centreX = data.centerBoardx
         self.centreY = data.centerBoardy
-
-    def updateCoords(self, data):
-        self.x = int(data.centerBoardx + self.rotateR * math.cos(self.angle))
-        self.y = int(data.centerBoardy + self.rotateR * math.sin(self.angle))
 
     def drawLine(self, canvas, data):
         canvas.create_line(self.x, self.y, self.centreX, self.centreY,
@@ -35,9 +30,9 @@ class Circle(object):
 
     def isOverlapping(self, other, data):
         sectorAngle = other.angle - self.angle
-        distance = 2 * data.circleRadius**2 * (1 + math.cos(sectorAngle))
-        #distance = (((other.x-self.x)**2 + (other.y-self.y)**2)**.5)
-        return distance < 2 * data.circleRadius
+        # distance = 2 * data.circleRadius**2 * (1 + math.cos(sectorAngle))
+        distance = (((other.x-self.x)**2 + (other.y-self.y)**2)**.5)
+        return distance < 2 * data.circleRadius + 5
 
     def __eq__(self, other):
         return self.color == other.color
@@ -59,49 +54,36 @@ class targetCircle(Circle):
 def init(data):
     data.centerBoardx = data.width//2
     data.centerBoardy = (1/10) * data.height + data.centerBoardx
-    data.numberOfCircles = 10
+    data.numberOfCircles = 3
     data.level = 0
     data.test = 10
+    data.circleRadius = int(getCircleRadius(data))
+    data.boardRadius = int(data.centerBoardx - 2 * data.circleRadius)
     data.targetRadius = data.width//10
     data.deltaAngle = 0.1
-    data.winDelay = 1700
-    data.circleRadius = getCircleRadius(data)
     init_1(data)
+    data.photo = PhotoImage(file = './images/background.gif')
 
 # put it in the run function
 def init_1(data):
     data.circleList = []
     data.step = 0
-    data.clearedCircle = False
-    data.winningCircle = None
-    data.wonLevel = False
-    data.timeElapsed = 0 #Used for transition between levels
-    data.circleRadius = getCircleRadius(data)
-    print(data.circleRadius)
-    data.boardRadius = int(data.centerBoardx - 2 * data.circleRadius)
     generateCircles(data)
     
 def getCircleRadius(data):
-    if data.numberOfCircles <= 10:
-        numberOfCircles = 9 #Reference number for standard board
-        print(numberOfCircles)
-    else:
-        numberOfCircles = data.numberOfCircles
     circumferenceBoard = 2 * math.pi * data.width
-    orbit = circumferenceBoard//(numberOfCircles // 3)
+    orbit = circumferenceBoard//data.numberOfCircles
     return orbit//(math.pi*2)//4
 
 def generateCircles(data):
     angle = (math.pi * 2)/data.numberOfCircles
+    print(angle)
+    print(data.numberOfCircles)
     for index in range(data.numberOfCircles):
-        (r, g, b) = (randint(0,51), randint(0,51), randint(0,51))
-        r *= 5
-        g *= 5
-        b *= 5
+        (r, g, b) = (randint(0,255), randint(0,255), randint(0,255))
         color = rgbString(r, g, b)
         data.circleList.append(Circle(angle*index, color, data))
     if isOverlapping(angle, data):
-        print("stop")
         data.circleRadius = getCircleRadius(data)
     targetIndex = randint(0, data.numberOfCircles - 1)
     targetColor = data.circleList[targetIndex].color
@@ -120,13 +102,17 @@ def mousePressed(event, data):
     for index in range(len(data.circleList)):
         circle = data.circleList[index]
         if circle.validClickInsideCircle(x, y) and circle==data.targetCircle:
-            data.clearedCircle = True
-            data.winningCircle = circle
+            data.level +=  1
+            difficulty(data)
+            init_1(data)
+            print("Yay")
 
 def difficulty(data):
-    if not isOverlapping(data.deltaAngle, data):        
+    if not data.circleList[0].isOverlapping(data.circleList[1], data):       
         if data.level % 2 == 0:
             data.numberOfCircles += 1
+    if data.circleList[0].isOverlapping(data.circleList[1], data):
+        data.circleRadius -= 2
     if data.level % 10 == 0:
         if data.deltaAngle < 0:
             data.deltaAngle -= 0.05
@@ -134,7 +120,6 @@ def difficulty(data):
             data.deltaAngle += 0.05
     if data.level % 5 == 0:
         data.deltaAngle *= -1
-
 
 def keyPressed(event, data):
     # use event.char and event.keysym
@@ -145,41 +130,21 @@ def timerFired(data):
     for index in range(len(data.circleList)):
         circle = data.circleList[index]
         circle.rotate(data)
-    if data.clearedCircle:
-        data.timeElapsed += data.timerDelay
-        if data.timeElapsed % data.winDelay != 0:
-            data.winningCircle.rotateR += data.timerDelay
-            data.winningCircle.updateCoords(data)
-            return
-        data.timeElapsed = 0
-        data.clearedCircle = False
-        data.circleList.remove(data.winningCircle)
-        data.winningCircle = None
-        newNumberOfCircles = len(data.circleList)
-        if newNumberOfCircles == 0:
-            data.level += 1
-            difficulty(data)
-            init_1(data)
-        else:
-            targetIndex = randint(0, len(data.circleList) - 1)
-            targetColor = data.circleList[targetIndex].color
-            data.targetCircle.color = targetColor
-            data.timeElapsed += data.timerDelay
+
+def imageDraw(canvas, data):
+    canvas.create_image(data.centerBoardx, data.centerBoardy, image=data.photo)
 
 def redrawAll(canvas, data):
     # draw in canvas
-    data.targetCircle.draw(canvas, data)
+    imageDraw(canvas, data)
     drawSurroundingCircles(canvas, data)
-
+    data.targetCircle.draw(canvas, data)
 
 def drawSurroundingCircles(canvas, data):
     for circle in range(len(data.circleList)):
-        data.circleList[circle].draw(canvas, data)
+        data.circleList[circle].drawLine(canvas, data)
     for circle in range(len(data.circleList)):
-        if data.clearedCircle and data.circleList[circle] is data.winningCircle:
-            continue
-        else: data.circleList[circle].drawLine(canvas, data)
-
+        data.circleList[circle].draw(canvas, data)
 
 ####################################
 # use the run function as-is
@@ -207,7 +172,7 @@ def run():
     # Set up data and call init
     class Struct(object): pass
     data = Struct()
-    data.timerDelay = 50 # milliseconds
+    data.timerDelay = 100 # milliseconds
     
     # create the root and the canvas
     root = Tk()
