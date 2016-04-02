@@ -7,7 +7,7 @@ from random import *
 class Circle(object):
     def __init__(self, angle, color, data):
         self.angle = angle
-        self.rotateR = data.boardRadius
+        self.rotateR = data.boardRadius #Rotation radius
         self.x = int(data.centerBoardx + self.rotateR * math.cos(self.angle))
         self.y = int(data.centerBoardy + self.rotateR * math.sin(self.angle))
         self.r = data.circleRadius
@@ -59,12 +59,12 @@ class targetCircle(Circle):
 def init(data):
     data.centerBoardx = data.width//2
     data.centerBoardy = (1/10) * data.height + data.centerBoardx
-    data.numberOfCircles = 10
+    data.numberOfCircles = 3
+    data.colorOffset = max(18 - data.numberOfCircles, 5)
     data.level = 0
-    data.test = 10
     data.targetRadius = data.width//10
     data.deltaAngle = 0.1
-    data.winDelay = 1700
+    data.animDelay = 600
     data.circleRadius = getCircleRadius(data)
     init_1(data)
 
@@ -77,31 +77,30 @@ def init_1(data):
     data.wonLevel = False
     data.timeElapsed = 0 #Used for transition between levels
     data.circleRadius = getCircleRadius(data)
-    print(data.circleRadius)
     data.boardRadius = int(data.centerBoardx - 2 * data.circleRadius)
     generateCircles(data)
     
 def getCircleRadius(data):
-    if data.numberOfCircles <= 10:
-        numberOfCircles = 9 #Reference number for standard board
-        print(numberOfCircles)
+    if data.numberOfCircles < 9:
+        radiusReference = 12 #Reference number for standard board
     else:
-        numberOfCircles = data.numberOfCircles
+        radiusReference = data.numberOfCircles + 4
     circumferenceBoard = 2 * math.pi * data.width
-    orbit = circumferenceBoard//(numberOfCircles // 3)
+    orbit = circumferenceBoard//(radiusReference / 4)
     return orbit//(math.pi*2)//4
 
 def generateCircles(data):
     angle = (math.pi * 2)/data.numberOfCircles
     for index in range(data.numberOfCircles):
-        (r, g, b) = (randint(0,51), randint(0,51), randint(0,51))
-        r *= 5
-        g *= 5
-        b *= 5
+        colorOffset = data.colorOffset
+        maxInt = 255//colorOffset
+        (r, g, b) = (randint(0,maxInt), randint(0,maxInt), randint(0,maxInt))
+        r *= colorOffset
+        g *= colorOffset
+        b *= colorOffset
         color = rgbString(r, g, b)
         data.circleList.append(Circle(angle*index, color, data))
     if isOverlapping(angle, data):
-        print("stop")
         data.circleRadius = getCircleRadius(data)
     targetIndex = randint(0, data.numberOfCircles - 1)
     targetColor = data.circleList[targetIndex].color
@@ -127,6 +126,8 @@ def difficulty(data):
     if not isOverlapping(data.deltaAngle, data):        
         if data.level % 2 == 0:
             data.numberOfCircles += 1
+            if data.colorOffset > 5:
+                data.colorOffset -= 1
     if data.level % 10 == 0:
         if data.deltaAngle < 0:
             data.deltaAngle -= 0.05
@@ -137,8 +138,8 @@ def difficulty(data):
 
 
 def keyPressed(event, data):
-    # use event.char and event.keysym
     pass
+
 
 def timerFired(data):
     data.step += 1
@@ -147,7 +148,7 @@ def timerFired(data):
         circle.rotate(data)
     if data.clearedCircle:
         data.timeElapsed += data.timerDelay
-        if data.timeElapsed % data.winDelay != 0:
+        if data.timeElapsed % data.animDelay != 0:
             data.winningCircle.rotateR += data.timerDelay
             data.winningCircle.updateCoords(data)
             return
@@ -168,9 +169,9 @@ def timerFired(data):
 
 def redrawAll(canvas, data):
     # draw in canvas
-    data.targetCircle.draw(canvas, data)
     drawSurroundingCircles(canvas, data)
-
+    data.targetCircle.draw(canvas, data)
+    drawGrid(canvas, data)
 
 def drawSurroundingCircles(canvas, data):
     for circle in range(len(data.circleList)):
@@ -179,6 +180,9 @@ def drawSurroundingCircles(canvas, data):
         if data.clearedCircle and data.circleList[circle] is data.winningCircle:
             continue
         else: data.circleList[circle].drawLine(canvas, data)
+
+def drawGrid(canvas, data):
+    pass
 
 
 ####################################
