@@ -1,73 +1,59 @@
-# from 112 CMU website
+import pygame
+import random
 
-from tkinter import *
+class Dot(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super(Dot, self).__init__()
+        self.radius = random.randint(5, 20)
+        self.x, self.y = x, y
+        self.xSpeed = random.randint(-10, 10)
+        self.ySpeed = random.randint(-10, 10)
+        self.rect = pygame.Rect(x - self.radius, y - self.radius,
+                                2 * self.radius, 2 * self.radius)
+        self.image = pygame.Surface((2 * self.radius, 2 * self.radius),
+                                    pygame.SRCALPHA)  # make it transparent
+        self.image = self.image.convert_alpha()
+        r = random.randint(0, 255)
+        g = random.randint(0, 255)
+        b = random.randint(0, 255)
+        pygame.draw.circle(self.image, (r, g, b),
+                           (self.radius, self.radius), self.radius)
 
-####################################
-# customize these functions
-####################################
+    def getRect(self):  # GET REKT
+        self.rect = pygame.Rect(self.x - self.radius, self.y - self.radius,
+                                2 * self.radius, 2 * self.radius)
 
-def init(data):
-    # load data.xyz as appropriate
-    pass
+    def update(self, screenWidth, screenHeight):
+        self.x += self.xSpeed
+        self.y += self.ySpeed
+        if self.x < 0:
+            self.x = screenWidth
+        elif self.x > screenWidth:
+            self. x = 0
+        if self.y < 0:
+            self.y = screenHeight
+        elif self.y > screenHeight:
+            self.y = 0
+        self.getRect()
 
-def mousePressed(event, data):
-    # use event.x and event.y
-    pass
+pygame.init()
+height = (14/16)* root.winfo_screenheight()
+width = (4/5) * root.winfo_screenheight()
+screen = pygame.display.set_mode((width, height))
+clock = pygame.time.Clock()
 
-def keyPressed(event, data):
-    # use event.char and event.keysym
-    pass
-
-def timerFired(data):
-    pass
-# idk how this works
-def redrawAll(canvas, data):
-    # draw in canvas
-    #Test this is a test
-    
-
-####################################
-# use the run function as-is
-####################################
-
-def run(width=300, height=300):
-    def redrawAllWrapper(canvas, data):
-        canvas.delete(ALL)
-        redrawAll(canvas, data)
-        canvas.update()    
-
-    def mousePressedWrapper(event, canvas, data):
-        mousePressed(event, data)
-        redrawAllWrapper(canvas, data)
-
-    def keyPressedWrapper(event, canvas, data):
-        keyPressed(event, data)
-        redrawAllWrapper(canvas, data)
-
-    def timerFiredWrapper(canvas, data):
-        timerFired(data)
-        redrawAllWrapper(canvas, data)
-        # pause, then call timerFired again
-        canvas.after(data.timerDelay, timerFiredWrapper, canvas, data)
-    # Set up data and call init
-    class Struct(object): pass
-    data = Struct()
-    data.width = width
-    data.height = height
-    data.timerDelay = 100 # milliseconds
-    init(data)
-    # create the root and the canvas
-    root = Tk()
-    canvas = Canvas(root, width=data.width, height=data.height)
-    canvas.pack()
-    # set up events
-    root.bind("<Button-1>", lambda event:
-                            mousePressedWrapper(event, canvas, data))
-    root.bind("<Key>", lambda event:
-                            keyPressedWrapper(event, canvas, data))
-    timerFiredWrapper(canvas, data)
-    # and launch the app
-    root.mainloop()  # blocks until window is closed
-    print("bye!")
-
-run(400, 200)
+dots = pygame.sprite.Group()
+playing = True
+while playing:
+    clock.tick(50)
+    for event in pygame.event.get():
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            d = Dot(*event.pos)
+            dots.add(d)
+        elif event.type == pygame.QUIT:
+            playing = False
+    dots.update(500, 500)
+    screen.fill((255, 255, 255))
+    dots.draw(screen)
+    pygame.display.flip()
+pygame.quit()
