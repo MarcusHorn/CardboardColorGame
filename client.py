@@ -125,6 +125,7 @@ def init(data):
     data.wonLevel = False
     data.timeElapsed = 0 #Used for transition between levels
     data.winDelay = 800
+    data.gameOver = False
 
 def initTitle(data):
     data.tr_height = data.height/6
@@ -145,12 +146,12 @@ def getWinningCircle(data):
             data.winningCircle = circle
 
 def getCircleRadius(data):
-    if data.numberOfCircles <= 10:
-        numberOfCircles = 9 #Reference number for standard board
+    if data.numberOfCircles < 9:
+        radiusReference = 12 #Reference number for standard board
     else:
-        numberOfCircles = data.numberOfCircles
+        radiusReference = data.numberOfCircles + 4
     circumferenceBoard = 2 * math.pi * data.width
-    orbit = circumferenceBoard//(numberOfCircles // 3)
+    orbit = circumferenceBoard//(radiusReference / 4)
     return orbit//(math.pi*2)//4
 
 def connectToServer(data):
