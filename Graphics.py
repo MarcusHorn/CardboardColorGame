@@ -246,7 +246,7 @@ def run():
     # Set up data and call init
     class Struct(object): pass
     data = Struct()
-    data.timerDelay = 50 # milliseconds
+    data.timerDelay = 25 # milliseconds
     
     # create the root and the canvas
     root = Tk()
