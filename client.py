@@ -42,7 +42,7 @@ def serverHandle(server,data):
             data.playersNeeded = int(msg.split("~")[1])
         elif "circles~" in msg:
             cir = msg.split("~")[-1]
-            data.deltaAngle += float(msg.split("~")[1])
+            tempCount = len(data.circleList)
             try:
                 cir = eval(cir)
                 data.circleList = [ ]
@@ -54,6 +54,8 @@ def serverHandle(server,data):
                     nc = Circle(x,y,r,angle,color,data)
                     data.circleList.append(nc)
                 data.numberOfCircles = len(data.circleList)
+                if data.numberOfCircles > tempCount:
+                    data.deltaAngle += float(msg.split("~")[1])
                 data.circleRadius = int(getCircleRadius(data))
                 data.boardRadius = int(data.centerBoardx - 2 * data.circleRadius)
                 getWinningCircle(data)
