@@ -4,7 +4,7 @@ class Circle(object):
         radianAngle = angle * (math.pi/180) #Used for math.cos and math.sin
         self.x = (boardRadius + boardRadius*math.cos(radianAngle)) // 1
         self.y = (boardRadius + boardRadius*math.sin(radianAngle)) // 1
-        self.r = circleRadius
+        self.r = circleRadius - (circleRadius*math.sin(radianAngle)) // 2
         
     def updateCircle(self, dAngle):
         self.angle += dAngle
@@ -12,6 +12,7 @@ class Circle(object):
         radianAngle = angle * (math.pi/180) #Used for math.cos and math.sin
         self.x = (boardRadius + boardRadius*math.cos(radianAngle)) // 1
         self.y = (boardRadius + boardRadius*math.sin(radianAngle)) // 1
+        
         
     def getCoords(self):
         return self.x, self.y
