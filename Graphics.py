@@ -61,12 +61,16 @@ def init(data):
     data.boardRadius = int(data.centerBoardx - 2 * data.circleRadius)
     data.targetRadius = data.width//10
     data.deltaAngle = 0.1
+    data.winDelay = 1000
     init_1(data)
 
 # put it in the run function
 def init_1(data):
     data.circleList = []
     data.step = 0
+    data.wonLevel = False
+    data.winningCircle = None
+    data.timeElapsed = 0 #Used for transition between levels
     generateCircles(data)
     
 def getCircleRadius(data):
@@ -102,10 +106,8 @@ def mousePressed(event, data):
     for index in range(len(data.circleList)):
         circle = data.circleList[index]
         if circle.validClickInsideCircle(x, y) and circle==data.targetCircle:
-            data.level +=  1
-            difficulty(data)
-            init_1(data)
-            print("Yay")
+            data.wonLevel = True
+            data.winningCircle = circle
 
 def difficulty(data):
     if not isOverlapping(data.deltaAngle, data):        
@@ -125,6 +127,16 @@ def keyPressed(event, data):
     pass
 
 def timerFired(data):
+    if data.wonLevel:
+        data.timeElapsed += data.timerDelay
+        if data.timeElapsed % data.winDelay != 0:
+            return
+        data.timeElapsed = 0
+        data.wonLevel = False
+        data.level += 1
+        difficulty(data)
+        init_1(data)
+        print("Yay")
     data.step += 1
     for index in range(len(data.circleList)):
         circle = data.circleList[index]
@@ -134,12 +146,17 @@ def redrawAll(canvas, data):
     # draw in canvas
     data.targetCircle.draw(canvas, data)
     drawSurroundingCircles(canvas, data)
+    if data.wonLevel == True:
+        drawWinAnimation(canvas, data)
 
 def drawSurroundingCircles(canvas, data):
     for circle in range(len(data.circleList)):
         data.circleList[circle].drawLine(canvas, data)
     for circle in range(len(data.circleList)):
         data.circleList[circle].draw(canvas, data)
+        
+def drawWinAnimation(canvas, data):
+    circle = data.winningCircle
 
 ####################################
 # use the run function as-is
